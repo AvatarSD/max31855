@@ -44,7 +44,7 @@ void max31855_recvd_handler(max31855_h *handler)
         HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
     }
     handler->mutex = false;
-    handler->xBS =! handler->xBS;
+    handler->xBS =~ handler->xBS;
     HAL_SPI_Receive_IT(handler->hspi, (uint8_t*)&(handler->data), 2);
 }
 
