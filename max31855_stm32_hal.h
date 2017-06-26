@@ -11,12 +11,12 @@ typedef struct {
     GPIO_TypeDef  *CS_port;
     uint16_t CS_pin;
 //private:
-    uint16_t data;
+    uint32_t data;
     bool mutex;
     uint16_t tc_temp;
     uint8_t err;
     uint16_t self_temp;
-    bool xBS;
+    //bool xBS;
 } max31855_h;
 
 typedef enum {
