@@ -9,16 +9,29 @@ int8_t max31855_init(max31855_h *handler)
 
     HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
     __HAL_SPI_ENABLE_IT(handler->hspi, SPI_IT_RXNE);
-    HAL_SPI_Receive_IT(handler->hspi, (uint8_t*)&(handler->data), 2);
+    HAL_SPI_Receive_IT(handler->hspi, (uint8_t*)&(handler->data), 4);
     handler->mutex = false;
 
     return 0;
+}
+
+static void swapBytes(uint32_t * data)
+{
+    uint8_t tmp, *rep = (uint8_t*)data;
+    tmp = rep[0];
+    rep[0] = rep[3];
+    rep[3] = tmp;
+    tmp = rep[1];
+    rep[1] = rep[2];
+    rep[2] = tmp;
 }
 
 void max31855_recvd_handler(max31855_h *handler)
 {
     handler->mutex = true;
     HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_SET);
+
+    swapBytes(&handler->data);
 
     if(((handler->data)>>16)&0x0001) handler->err |= MAX_FAULT;
     else handler->err &=~ MAX_FAULT;
