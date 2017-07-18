@@ -13,9 +13,9 @@ typedef struct {
     uint16_t CS_pin;
     //private:
     volatile uint32_t data;
-    volatile uint16_t tc_temp;
     volatile uint8_t err;
-    volatile uint16_t self_temp;
+    volatile float tc_temp;
+    volatile float self_temp;
 } max31855_h;
 
 typedef enum {
