@@ -42,8 +42,17 @@ void max31855_recvd_handler(max31855_h *handler)
     if(handler->data&TC_SHORT_VCC) handler->err |= TC_SHORT_VCC;
     else handler->err &=~ TC_SHORT_VCC;
 
-    handler->self_temp = ((handler->data)>>4) & 0b111111111111;
-    handler->tc_temp  = ((handler->data)>>18) & 0b11111111111111;
+    /****/
+    uint32_t v = ((handler->data >> 18) & 0x00003FFFF);
+    if ((v>>13) & 0x1) v|=(0xFFFF<<13); //todo: check
+    handler->tc_temp = ((float)v)*0.25;
+    /****/
+
+    /****/
+    v = (((handler->data)>>4) & 0x7FF);
+    if ((v>>11) & 0x1) v|=(0xFFFF<<11);
+    handler->self_temp = ((float)v)*0.0625;
+    /****/
 
     HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
     handler->mutex = false;
