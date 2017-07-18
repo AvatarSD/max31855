@@ -43,7 +43,7 @@ void max31855_recvd_handler(max31855_h *handler)
     else handler->err &=~ TC_SHORT_VCC;
 
     handler->self_temp = ((handler->data)>>4) & 0b111111111111;
-    handler->tc_temp  = ((handler->data)>>17) & 0b11111111111111;
+    handler->tc_temp  = ((handler->data)>>18) & 0b11111111111111;
 
     HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
     handler->mutex = false;
