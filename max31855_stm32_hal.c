@@ -44,13 +44,13 @@ void max31855_recvd_handler(max31855_h *handler)
     else handler->err &=~ TC_SHORT_VCC;
 
     /****/
-    uint32_t v = ((handler->data >> 18) & 0x00003FFFF);
+    uint32_t v = (((handler->data) >> 18) & 0x3FFF);
     if ((v>>13) & 0x1) v|=(0xFFFF<<13); //todo: check
     handler->tc_temp = ((float)v)*0.25;
     /****/
 
     /****/
-    v = (((handler->data)>>4) & 0x7FF);
+    v = (((handler->data)>>4) & 0xFFF);
     if ((v>>11) & 0x1) v|=(0xFFFF<<11);
     handler->self_temp = ((float)v)*0.0625;
     /****/
