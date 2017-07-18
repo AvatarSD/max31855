@@ -2,20 +2,22 @@
 
 int8_t max31855_init(max31855_h *handler)
 {
-    handler->mutex = true;
     handler->tc_temp = 0;
     handler->self_temp = 0;
     handler->err = 0;
 
-    HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_SET);
+    HAL_Delay(2);
+
     __HAL_SPI_ENABLE_IT(handler->hspi, SPI_IT_RXNE);
+
+    HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
     HAL_SPI_Receive_IT(handler->hspi, (uint8_t*)&(handler->data), 4);
-    handler->mutex = false;
 
     return 0;
 }
 
-static void swapBytes(uint32_t * data)
+static inline void swapBytes(volatile uint32_t * data)
 {
     uint8_t tmp, *rep = (uint8_t*)data;
     tmp = rep[0];
@@ -28,7 +30,6 @@ static void swapBytes(uint32_t * data)
 
 void max31855_recvd_handler(max31855_h *handler)
 {
-    handler->mutex = true;
     HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_SET);
 
     swapBytes(&handler->data);
@@ -54,29 +55,20 @@ void max31855_recvd_handler(max31855_h *handler)
     handler->self_temp = ((float)v)*0.0625;
     /****/
 
-    HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
-    handler->mutex = false;
-
     max31855_temp_recvd(handler);
+
+    HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
     HAL_SPI_Receive_IT(handler->hspi, (uint8_t*)&(handler->data), 4);
 }
 
 float max31855_getTemp(max31855_h *handler)
 {
-    while(handler->mutex) __NOP();
-    handler->mutex = true;
-    float temp = handler->tc_temp;
-    handler->mutex = false;
-    return temp;
+    return handler->tc_temp;
 }
 
 float max31855_getSelfTemp(max31855_h *handler)
 {
-    while(handler->mutex) __NOP();
-    handler->mutex = true;
-    float temp = handler->self_temp;
-    handler->mutex = false;
-    return temp;
+    return handler->self_temp;
 }
 
 __weak void max31855_temp_recvd(max31855_h * handler)
