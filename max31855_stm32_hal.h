@@ -4,17 +4,18 @@
 //note: include required hal version for yout mcu series(f0/f1/f3 etc)
 #include "stm32f4xx.h"
 #include "stdbool.h"
+#include "inttypes.h"
 
 typedef struct {
-//required to init manually:
+    //required to init manually:
     SPI_HandleTypeDef * hspi;
-    GPIO_TypeDef  *CS_port;
+    GPIO_TypeDef * CS_port;
     uint16_t CS_pin;
-//private:
+    //private:
     volatile uint32_t data;
-    volatile uint16_t tc_temp;
     volatile uint8_t err;
-    volatile uint16_t self_temp;
+    volatile float tc_temp;
+    volatile float self_temp;
 } max31855_h;
 
 typedef enum {
@@ -26,22 +27,27 @@ typedef enum {
 
 
 int8_t max31855_init(max31855_h * handler);
-void max31855_recvd_handler(max31855_h * handler); // must be called from spi_rx_cplt hal event
+void max31855_recvd_handler(max31855_h *
+                            handler); // must be called from spi_rx_cplt hal event
 void max31855_temp_recvd(max31855_h * handler);
 float max31855_getTemp(max31855_h * handler);
 float max31855_getSelfTemp(max31855_h * handler);
 
-inline bool MAX31855_isTcShortVccErr(max31855_h * handler){
+inline bool MAX31855_isTcShortVccErr(max31855_h * handler)
+{
     return ((handler->err)&TC_SHORT_VCC);
 }
 
-inline bool MAX31855_isTcShortGndErr(max31855_h * handler){
+inline bool MAX31855_isTcShortGndErr(max31855_h * handler)
+{
     return ((handler->err)&TC_SHORT_GND);
 }
-inline bool MAX31855_isTcNoConnectedErr(max31855_h * handler){
+inline bool MAX31855_isTcNoConnectedErr(max31855_h * handler)
+{
     return ((handler->err)&TC_NO_CONNECTED);
 }
-inline bool MAX31855_isMaxFaultErr(max31855_h * handler){
+inline bool MAX31855_isMaxFaultErr(max31855_h * handler)
+{
     return ((handler->err)&MAX_FAULT);
 }
 

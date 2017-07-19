@@ -6,6 +6,9 @@ int8_t max31855_init(max31855_h *handler)
     handler->self_temp = 0;
     handler->err = 0;
 
+    HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_SET);
+    HAL_Delay(2);
+
     __HAL_SPI_ENABLE_IT(handler->hspi, SPI_IT_RXNE);
 
     HAL_GPIO_WritePin(handler->CS_port, handler->CS_pin, GPIO_PIN_RESET);
@@ -14,7 +17,7 @@ int8_t max31855_init(max31855_h *handler)
     return 0;
 }
 
-static void swapBytes(volatile uint32_t * data)
+static inline void swapBytes(volatile uint32_t * data)
 {
     uint8_t tmp, *rep = (uint8_t*)data;
     tmp = rep[0];
@@ -40,8 +43,17 @@ void max31855_recvd_handler(max31855_h *handler)
     if(handler->data&TC_SHORT_VCC) handler->err |= TC_SHORT_VCC;
     else handler->err &=~ TC_SHORT_VCC;
 
-    handler->self_temp = ((handler->data)>>4) & 0b111111111111;
-    handler->tc_temp  = ((handler->data)>>18) & 0b11111111111111;
+    /****/
+    uint32_t v = (((handler->data) >> 18) & 0x3FFF);
+    if ((v>>13) & 0x1) v|=(0xFFFF<<13); //todo: check
+    handler->tc_temp = ((float)v)*0.25;
+    /****/
+
+    /****/
+    v = (((handler->data)>>4) & 0xFFF);
+    if ((v>>11) & 0x1) v|=(0xFFFF<<11);
+    handler->self_temp = ((float)v)*0.0625;
+    /****/
 
     max31855_temp_recvd(handler);
 
@@ -51,12 +63,12 @@ void max31855_recvd_handler(max31855_h *handler)
 
 float max31855_getTemp(max31855_h *handler)
 {
-    return ((float)handler->tc_temp)*0.25;
+    return handler->tc_temp;
 }
 
 float max31855_getSelfTemp(max31855_h *handler)
 {
-    return ((float)handler->self_temp)*0.0625;
+    return handler->self_temp;
 }
 
 __weak void max31855_temp_recvd(max31855_h * handler)
